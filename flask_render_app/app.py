@@ -3,6 +3,7 @@ from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+import logging
 
 load_dotenv()
 
@@ -12,7 +13,16 @@ CORS(app)  # Enable CORS for all routes
 # Supabase setup
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set")
+
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    logging.info("Supabase client initialized successfully")
+except Exception as e:
+    logging.error(f"Failed to initialize Supabase client: {e}")
+    raise
 
 @app.route('/api/prazos', methods=['GET'])
 def get_prazos():
