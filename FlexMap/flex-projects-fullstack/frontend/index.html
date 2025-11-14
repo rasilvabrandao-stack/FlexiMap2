@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flex Projects – Cronograma com Tipos</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.maptiler.com/maptiler-sdk-js/v3.6.1/maptiler-sdk.umd.min.js"></script>
+<link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.6.1/maptiler-sdk.css" rel="stylesheet" />
+<style>
+:root {
+  --primary-color: #1a73e8;
+  --secondary-color: #34a853;
+  --accent-color: #fbbc04;
+  --danger-color: #ea4335;
+  --dark-bg: #1f2937;
+  --light-bg: #f8fafc;
+  --text-color: #111;
+  --bg-color: #fff;
+}
+[data-theme="dark"] {
+  --light-bg: #1f2937;
+  --dark-bg: #f8fafc;
+  --text-color: #f8fafc;
+  --bg-color: #1f2937;
+}
+
+/* ---------- Ajustes para modo noturno ---------- */
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
+  background-color: #1f2937; /* mesma cor do card escuro */
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover > td,
+[data-theme="dark"] .table-hover > tbody > tr:hover > th {
+  background-color: #374151;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .table {
+  --bs-table-bg: #1f2937;
+  --bs-table-color: #f8fafc;
+  --bs-table-border-color: #4b5563;
+}
+
+/* Resultados da busca */
+[data-theme="dark"] #searchResults .card {
+  background-color: #1f2937;
+  color: #f8fafc;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] #searchResults .list-group-item {
+  background-color: #111827;
+  color: #f8fafc;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] #searchResults .list-group-item:hover {
+  background-color: #374151;
+}
+
+#deadlineText { font-weight: 600; }
+.text-ontime  { color: var(--secondary-color); }
+.text-early   { color: var(--secondary-color); }
+.text-late    { color: var(--danger-color); }
+
+body {
+  background: var(--light-bg);
+  color: var(--text-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background .3s, color .3s;
+}
+.navbar {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  box-shadow: 0 2px 10px rgba(0,0,0,.1);
+}
+[data-theme="dark"] .navbar {
+  background: linear-gradient(135deg, #0b1120, #1f2937);
+}
+.card {
+  background: var(--bg-color);
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  transition: transform .3s, box-shadow .3s;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .timeline-item,
+[data-theme="dark"] .calendar-day {
+  background: #111827;
+  color: #f8fafc;
+  border-color: #374151;
+  
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.12);
+}
+.stats-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .2s;
+}
+.stats-card:hover {
+  transform: scale(1.03);
+}
+.stats-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.progress-bar-custom {
+  height: 10px;
+  background: #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width .3s ease;
+}
+.timeline-item {
+  position: relative;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--bg-color);
+  border-radius: 15px;
+  border-left: 5px solid var(--primary-color);
+  cursor: pointer;
+  transition: all .3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.timeline-item:hover {
+  background: #f8f9ff;
+  transform: translateX(10px);
+}
+
+[data-theme="dark"] .timeline-item:hover {
+  background: rgb(67, 63, 63);
+}
+
+
+.timeline-item.pending {
+  border-left-color: var(--danger-color);
+}
+.timeline-item.in-progress {
+  border-left-color: var(--accent-color);
+}
+.timeline-item.completed {
+  border-left-color: var(--secondary-color);
+}
+.calendar-day {
+  border: 1px solid #dee2e6;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  cursor: pointer;
+  position: relative;
+  background: var(--bg-color);
+  border-radius: 6px;
+  transition: background .2s;
+}
+[data-theme="dark"] .calendar-day {
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .calendar-day:hover {
+  background: rgb(67, 63, 63);
+}
+
+.calendar-day:hover {
+  background: #f0f8ff;
+}
+.calendar-day.today {
+  border: 2px solid var(--primary-color);
+}
+.emoji-day {
+  font-size: 16px;
+  line-height: 1;
+  margin: 1px;
+}
+#map {
+  height: 500px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+.vehicle-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform .3s ease;
+}
+.vehicle-icon:hover {
+  transform: scale(1.2);
+}
+.upload-area {
+  border: 2px dashed var(--primary-color);
+  border-radius: 15px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .3s ease;
+}
+.upload-area:hover {
+  background: rgba(26, 115, 232, .05);
+  border-color: var(--secondary-color);
+}
+.toast-container {
+  z-index: 11;
+}
+.skeleton {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s infinite;
+}
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+#themeIcon::before {
+  content: "\f185";
+}
+[data-theme="dark"] #themeIcon::before {
+  content: "\f186";
+}
+/* ---------- EXTRAS PARA EDIÇÃO E STATUS ---------- */
+.btn-group-status .btn { font-size: .8rem; }
+.btn-concluir { background: #34a853; color:#fff; }
+.btn-concluir:hover { background: #2e8b47; }
+.btn-editar { background: #1a73e8; color:#fff; }
+.btn-editar:hover { background: #1557b0; }
+</style>
+<base target="_blank">
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fas fa-project-diagram me-2"></i>Flex Projects</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="#timeline"><i class="fas fa-tasks me-1"></i> Cronograma</a></li>
+        <li class="nav-item"><a class="nav-link" href="#calendar"><i class="fas fa-calendar me-1"></i> Calendário</a></li>
+        <li class="nav-item"><a class="nav-link" href="#map-section"><i class="fas fa-map me-1"></i> Mapa</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#uploadModal"><i class="fas fa-upload me-1"></i> Importar Planilha</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="exportExcel()"><i class="fas fa-file-excel me-1"></i> Exportar Excel</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showReportModal()"><i class="fas fa-chart-bar me-1"></i> Relatórios</a></li>
+        <li class="nav-item ms-3">
+          <button id="themeToggle" class="btn btn-sm btn-outline-light border-0" aria-label="Alternar tema" title="Alternar tema">
+            <i class="fa-solid fa-sun" id="themeIcon"></i>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid mt-4">
+  <!-- Dashboard -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="stats-card" onclick="showProjectList('all')" style="cursor:pointer;">
+        <div class="stats-number" id="totalProjects">0</div>
+        <div>Total de Projetos</div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="stats-card" style="background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);cursor:pointer;" onclick="showProjectList('active')">
+        <div class="stats-number" id="activeProjects">0</div>
+        <div>Em Andamento</div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="stats-card" style="background: linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);cursor:pointer;" onclick="showProjectList('completed')">
+        <div class="stats-number" id="completedProjects">0</div>
+        <div>Concluídos</div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="stats-card" style="background: linear-gradient(135deg,#ff7e5f 0%,#feb47b 100%);cursor:pointer;" onclick="showProjectList('pending')">
+        <div class="stats-number" id="pendingProjects">0</div>
+        <div>Pendentes</div>
+      </div>
+    </div>
+  </div>
+  <!-- Botões rápidos -->
+  <div class="row mb-4 text-center">
+    <div class="col-3">
+      <button class="btn btn-outline-primary btn-lg w-100" onclick="toggleCalendar('monthly')">
+        <i class="fa-solid fa-calendar-days fa-2x d-block mb-2"></i><span>Mensal</span>
+      </button>
+    </div>
+    <div class="col-3">
+      <button class="btn btn-outline-primary btn-lg w-100" onclick="toggleCalendar('annual')">
+        <i class="fa-solid fa-calendar-alt fa-2x d-block mb-2"></i><span>Anual</span>
+      </button>
+    </div>
+    <div class="col-3">
+      <button class="btn btn-success btn-lg w-100" onclick="newProjectModal()">
+        <i class="fa-solid fa-plus fa-2x d-block mb-2"></i><span>Adicionar Prazo</span>
+      </button>
+    </div>
+    <div class="col-3">
+  <button class="btn btn-danger btn-lg w-100" onclick="showOverdueProjects()">
+    <i class="fa-solid fa-exclamation-triangle fa-2x d-block mb-2"></i><span>Prazos Atrasados</span>
+  </button>
+</div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="input-group">
+        <input type="text" class="form-control" id="searchInput" placeholder="Buscar projetos por nome, tipo, estado ou descrição...">
+        <button class="btn btn-outline-secondary" onclick="performSearch()">
+          <i class="fas fa-search"></i>
+        </button>
+        <button class="btn btn-outline-secondary" onclick="clearSearch()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="searchResults" class="mt-2"></div>
+    </div>
+  </div>
+  <!-- Calendário Mensal -->
+  <section id="monthlyCalendar" class="mb-5">
+    <div class="card">
+      <div class="card-header bg-success text-white"><h4 class="mb-0"><i class="fas fa-calendar me-2"></i> Calendário Mensal</h4></div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <button class="btn btn-sm btn-secondary" id="prevMonth">&lt;</button>
+          <h5 id="currentMonth"></h5>
+          <button class="btn btn-sm btn-secondary" id="nextMonth">&gt;</button>
+        </div>
+        <div class="d-grid" id="calendarGrid" style="grid-template-columns: repeat(7, 1fr); gap:4px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calendário Anual -->
+  <section id="annualCalendar" class="mb-5" style="display:none;">
+    <div class="card">
+      <div class="card-header bg-info text-white"><h4 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> Calendário Anual</h4></div>
+      <div class="card-body">
+        <div class="annual-calendar-header d-flex justify-content-between align-items-center mb-3">
+          <button class="btn btn-sm btn-secondary" id="prevYear"><i class="fas fa-chevron-left"></i></button>
+          <h5 id="currentYear"></h5>
+          <button class="btn btn-sm btn-secondary" id="nextYear"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="row" id="annualGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section id="timeline" class="mb-5">
+    <div class="card">
+      <div class="card-header bg-primary text-white"><h4 class="mb-0"><i class="fas fa-tasks me-2"></i> Timeline de Projetos</h4></div>
+      <div class="card-body"><div class="timeline" id="timelineContainer"></div></div>
+    </div>
+  </section>
+
+  <!-- Mapa -->
+  <section id="map-section" class="mb-5">
+    <div class="card">
+      <div class="card-header bg-info text-white"><h4 class="mb-0"><i class="fas fa-map me-2"></i> Mapa de Projetos</h4></div>
+      <div class="card-body">
+        <div class="row mb-2">
+          <div class="col-12">
+            <button id="dragToggle" class="btn btn-sm btn-outline-primary" onclick="toggleDragMode()">
+              <i class="fas fa-hand-paper"></i> <span id="dragText">🔒 Mover veículos</span>
+            </button>
+            <button class="btn btn-sm btn-warning" id="undoMoveBtn" onclick="undoLastMove()" disabled>
+              <i class="fas fa-undo"></i> Desfazer (Ctrl+Z)
+            </button>
+            <button class="btn btn-sm btn-info" id="redoMoveBtn" onclick="redoLastMove()" disabled>
+              <i class="fas fa-redo"></i> Refazer (Ctrl+Y)
+            </button>
+            <small class="text-muted ms-2">Ative para arrastar marcadores ou clicar no mapa</small>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="input-group">
+              <input type="file" class="form-control" id="mapSpreadsheet" accept=".csv,.xlsx,.xls">
+              <button class="btn btn-primary-custom" onclick="loadMapData()"><i class="fas fa-upload me-2"></i>Carregar Dados</button>
+              <style>
+                [data-theme="dark"] .btn-primary-custom {
+                  background: green;
+                  color: #f8fafc;
+                }
+                .btn-primary-custom {
+                  background: green;
+                  color: #f8fafc;
+                  border-radius: 20px;
+                }
+              </style>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="btn-group" role="group">
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('all')"><i class="fas fa-globe me-1"></i> Todos</button>
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('bus')"><i class="fas fa-bus me-1"></i> Ônibus</button>
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('truck')"><i class="fas fa-truck me-1"></i> Caminhão</button>
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('van')"><i class="fas fa-shuttle-van me-1"></i> Van</button>
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('cabin')"><i class="fas fa-home me-1"></i> Cabine</button>
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('carreta')"><i class="fas fa-tractor me-1"></i> Carreta</button>
+              <button class="btn btn-outline-secondary" onclick="filterVehicles('container')"><i class="fas fa-box me-1"></i> Container</button>
+            </div>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-12">
+            <!--<button class="btn btn-success" onclick="newVehicleModal()"><i class="fas fa-plus"></i> Adicionar Veículo</button>-->
+          </div>
+        </div>
+        <div id="map"></div><!-- Botão Gestão projetos -->
+<div class="text-center mt-3">
+  <a href="https://drive.google.com/drive/u/2/folders/1d_bAd7QJ3Kdy6ELMVbm0G8x4n_gO4ueD"
+     target="_blank"
+     class="btn btn-primary btn-lg px-4">
+    <i class="fas fa-folder-open me-2"></i>Gestão projetos
+  </a>
+</div>
+        <div class="mt-3"><h5>Veículos por Estado</h5>
+          <div class="table-responsive">
+            <table class="table table-striped"><thead><tr><th>Estado</th><th>Ônibus</th><th>Caminhões</th><th>Vans</th><th>Carretas</th><th>Containers</th><th>Cabines</th><th>Total</th></tr></thead>
+              <tbody id="vehiclesTable"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<!-- Modal Lista de Projetos (filtrados) -->
+<div class="modal fade" id="projectListModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="projectListTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul id="projectListItems" class="list-group"></ul>
+        <style>
+          [data-theme="dark"] .list-group-item {
+            background: #1f2937;
+            color: #f8fafc;
+          }
+        </style>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Projeto / Adicionar Prazo -->
+<div class="modal fade" id="newProjectModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fa-solid fa-plus"></i> Adicionar Prazo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <style>
+          [data-theme="dark"] .modal-body {
+            background: #1f2937;
+          }
+
+          [data-theme="dark"] #newProjectDesc {
+            background: #1f2937;
+            color: #f8fafc;
+          }
+          [data-theme="dark"] #newProjectType {
+            background: #1f2937;
+            color: #f8fafc;
+          }
+
+          [data-theme="dark"] #projectAddress {
+            background: #1f2937;
+            color: #f8fafc;
+
+          }
+          [data-theme="dark"] #projectAddress::placeholder {
+            color: #f8fafc;
+
+          }
+          [data-theme="dark"] #newProjectStart {
+            background: #374151;
+            color: #f8fafc;
+            border-color: #4b5563;
+          }
+          [data-theme="dark"] #newProjectEnd {
+            background: #374151;
+            color: #f8fafc;
+            border-color: #4b5563;
+          }
+          [data-theme="dark"] .modal-footer {
+            background: #1f2937;
+          }
+          
+        </style>
+        <!-- LINHA 1: Nome -->
+        <div class="row mb-2">
+          <div class="col-12"><label class="form-label">Nome do Projeto</label>
+            <input type="text" class="form-control" id="newProjectName" required></div>
+            <style>
+              [data-theme="dark"] #newProjectName {
+                background: #374151;
+                color: #f8fafc;
+                border-color: #4b5563;
+              }
+              </style>
+        </div>
+        <!-- LINHA 2: Descrição -->
+        <div class="row mb-2">
+          <div class="col-12"><label class="form-label">Descrição</label>
+            <textarea class="form-control" id="newProjectDesc" rows="2"></textarea></div>
+        </div>
+        <!-- LINHA 3: Tipo -->
+        <div class="row mb-2">
+          <div class="col-12"><label class="form-label">Tipo de Prazo</label>
+            <select class="form-select" id="newProjectType" required>
+              <option value="">Selecione...</option>
+              <option value="Ônibus">Ônibus 🚌</option>
+              <option value="Caminhão">Caminhão 🚛</option>
+              <option value="Carreta">Carreta 🚜</option>
+              <option value="Van">Van 🚐</option>
+              <option value="Container">Container 📦</option>
+              <option value="Cabine">Cabine 🏠</option>
+            </select></div>
+        </div>
+        <!-- LINHA 4: Datas -->
+        <div class="row mb-2">
+          <div class="col-md-6"><label class="form-label">Data Início</label>
+            <input type="date" class="form-control" id="newProjectStart" required></div>
+          <div class="col-md-6"><label class="form-label">Data Fim</label>
+            <input type="date" class="form-control" id="newProjectEnd" required></div>
+        </div>
+       <!-- LINHA 5: Endereço (Estado oculto) -->
+<div class="row mb-2">
+  <!-- Estado oculto para não quebrar o código -->
+  <div class="col-12" style="display:none;">
+    <select class="form-select" id="newProjectState">
+      <option value=""></option>
+    </select>
+  </div>
+
+  <div class="col-12">
+    <label class="form-label">Endereço</label>
+    <div class="input-group">
+      <input type="text" class="form-control" id="projectAddress" placeholder="Ex: 5th Ave, New York">
+      <button class="btn btn-outline-secondary" type="button" onclick="localizarEnderecoProjeto()">
+        <i class="fas fa-search"></i> Localizar
+      </button>
+    </div>
+  </div>
+</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="addNewProject()">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fa-solid fa-xmark"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Lista de Projetos do Dia -->
+<div class="modal fade" id="dayProjectsModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h6 class="modal-title">Escolha um prazo</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul id="dayProjectsList" class="list-group"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Adicionar Veículo Rápido -->
+<div class="modal fade" id="newVehicleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title"><i class="fas fa-truck"></i> Adicionar Veículo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label>Tipo</label>
+          <select class="form-select" id="vehicleType">
+            <option value="Ônibus">Ônibus 🚌</option>
+            <option value="Caminhão">Caminhão 🚛</option>
+            <option value="Carreta">Carreta 🚜</option>
+            <option value="Van">Van 🚐</option>
+            <option value="Container">Container 📦</option>
+            <option value="Cabine">Cabine 🏠</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label>Quantidade</label>
+          <input type="number" class="form-control" id="vehicleQty" min="1" value="1">
+        </div>
+        <div class="mb-2">
+
+        </div>
+                <!-- Endereço + Localizar -->
+        <div class="mb-3">
+          <label class="form-label">Endereço completo</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="vehicleAddress" placeholder="Ex: Av. Paulista, 1578, São Paulo">
+            <button class="btn btn-outline-secondary" type="button" onclick="localizarEndereco()">
+              <i class="fas fa-search"></i> Localizar
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-2"><label>Latitude</label><input type="number" class="form-control" id="vehicleLat" step="0.000001" placeholder="-22.9068"></div>
+          <div class="col-md-6 mb-2"><label>Longitude</label><input type="number" class="form-control" id="vehicleLng" step="0.000001" placeholder="-43.1729"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-warning" onclick="addVehicle()"><i class="fas fa-save"></i> Salvar</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Importar Planilha -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fa-solid fa-upload"></i> Importar Planilha</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="upload-area" id="uploadArea"><i class="fa-solid fa-cloud-upload-alt fa-3x text-primary mb-3"></i><h5>Arraste sua planilha aqui</h5><p class="text-muted">ou clique para selecionar</p><input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;"></div>
+        <div class="mt-3">
+          <small class="text-muted">Formatos aceitos: CSV, XLSX, XLS</small><br>
+          <small class="text-muted"><strong>Colunas:</strong> Nome, Tipo, Quantidade, Estado, Latitude, Longitude, Descrição, Início, Término, Funcionamento</small>
+        </div>
+        <div class="mt-2">
+          <button class="btn btn-sm btn-outline-secondary" onclick="copyModelHeader()"><i class="fas fa-copy"></i> Copiar Modelo</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary-custom" onclick="processUploadedFile()"><i class="fa-solid fa-process"></i> Processar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalhes / Edição -->
+<div class="modal fade" id="projectDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="detailModalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6"><strong>Tipo:</strong> <span id="detailModalType"></span></div>
+          <div class="col-md-6"><strong>Status:</strong> <span id="detailModalStatus"></span></div>
+        </div>
+        <div class="mb-3"><strong>Descrição:</strong>
+          <p class="mb-0" id="detailModalDesc"></p>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6"><strong>Início:</strong> <span id="detailModalStart"></span></div>
+          <div class="col-md-6"><strong>Fim:</strong> <span id="detailModalEnd"></span></div>
+        </div>
+        <div class="mb-3" id="completionInfo" style="display: none;">
+          <strong>Data de Conclusão:</strong>
+          <p class="mb-0" id="detailModalCompletionDate">—</p>
+          <small id="completionDifference" class="text-muted"></small>
+        </div>
+        <div class="mb-3">
+  <strong>Prazo:</strong>
+  <p class="mb-0" id="deadlineText">—</p>
+</div>
+
+        <div class="mb-3"><strong>Progresso:</strong>
+          <div class="progress-bar-custom mt-1"><div class="progress-fill bg-success" id="detailModalProgressBar"></div></div>
+          <small id="detailModalPercent">0</small>%
+        </div>
+        <div class="mb-3"><strong>Endereço:</strong>
+          <p class="mb-0" id="detailModalAddress">—</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-editar" onclick="openEditModal()"><i class="fas fa-edit"></i> Editar</button>
+          <button class="btn btn-concluir" id="btnConcluir" onclick="markAsDone()"><i class="fas fa-check"></i> Marcar Concluído</button>
+          <button class="btn btn-danger ms-auto" onclick="deleteProject(id)"><i class="fas fa-trash"></i> Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Relatórios -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="fas fa-chart-bar"></i> Relatório de Projetos</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Resumo Geral</h6>
+            <ul class="list-group" id="reportSummary"></ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Distribuição por Tipo</h6>
+            <ul class="list-group" id="reportByType"></ul>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <h6>Distribuição por Estado</h6>
+            <ul class="list-group" id="reportByState"></ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Distribuição por Status</h6>
+            <ul class="list-group" id="reportByStatus"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" onclick="exportReport()"><i class="fas fa-download"></i> Exportar Relatório</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+
+function showOverdueProjects() {
+  const today = new Date();
+  const overdue = projects.filter(p => {
+    const end = new Date(p.endDate);
+    return p.status !== 'completed' && today > end;
+  });
+
+  if (overdue.length === 0) {
+    toastShow('Nenhum prazo atrasado no momento.', 'info');
+    return;
+  }
+
+  const list = document.getElementById('projectListItems');
+  list.innerHTML = '';
+  overdue.forEach(p => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.style.cursor = 'pointer';
+    li.innerHTML = `${getTypeEmoji(p.type)} ${escapeHtml(p.name)} <span class="badge bg-danger">Atrasado</span>`;
+    li.onclick = () => showProjectModal(p.id);
+    list.appendChild(li);
+  });
+
+  document.getElementById('projectListTitle').textContent = 'Prazos Atrasados';
+  new bootstrap.Modal(document.getElementById('projectListModal')).show();
+}
+
+/* ==========  VARIÁVEIS GLOBAIS ========== */
+let projects = [];
+
+const API = 'https://flexmap.onrender.com/api/prazos';
+
+async function loadProjects() {
+  const res = await fetch(API);
+  projects = await res.json();
+  updateDashboard(); renderTimeline(); renderCalendar(); renderAnnualCalendar(); addProjectMarkers();
+}
+
+async function saveProject(p) {
+  await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nome: p.name,
+      descricao: p.description,
+      tipo: p.type,
+      data_inicio: p.startDate,
+      data_fim: p.endDate,
+      estado: p.location.state,
+      endereco: p.address,
+      latitude: p.location.lat,
+      longitude: p.location.lng
+    })
+  });
+  loadProjects();
+}
+
+async function updateProject(id, changes) {
+  await fetch(`${API}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(changes)
+  });
+  loadProjects();
+}
+
+async function deleteProject(id) {
+  await fetch(`${API}/${id}`, { method: 'DELETE' });
+  loadProjects();
+}
+let currentProjectId = null;
+let editingId   = null;        // NOVO: identifica edição
+let map, markers = [];
+let currentDate = new Date();
+let selectedYear = currentDate.getFullYear();
+let uploadedFile = null;
+let positionHistory = []; // Array para armazenar histórico
+let historyIndex = -1; // Índice atual no histórico
+
+/* ==========  UTILS ========== */
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function saveProject() {
+  // Agora é só um gatilho — o backend já foi atualizado
+  updateDashboard();
+}
+function toastShow(msg, type) {
+  const container = document.getElementById('toastContainer');
+  const id = 'toast' + Date.now();
+  container.insertAdjacentHTML('beforeend', `
+    <div id="${id}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+      <div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+    </div>`);
+  new bootstrap.Toast(document.getElementById(id)).show();
+}
+
+/* ---------- DARK MODE ---------- */
+const btn = document.getElementById('themeToggle');
+const icn = document.getElementById('themeIcon');
+const html = document.documentElement;
+const pref = localStorage.getItem('theme');
+if (pref === 'dark') ativarDark(false);
+btn.addEventListener('click', () => ativarDark(true));
+function ativarDark(salvar) {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  if (!isDark) {
+    html.setAttribute('data-theme', 'dark');
+    icn.classList.replace('fa-sun', 'fa-moon');
+    if (salvar) localStorage.setItem('theme', 'dark');
+  } else {
+    html.removeAttribute('data-theme');
+    icn.classList.replace('fa-moon', 'fa-sun');
+    if (salvar) localStorage.setItem('theme', 'light');
+  }
+}
+
+/* ---------- DASHBOARD ---------- */
+function updateDashboard() {
+  const today = new Date();
+  const statuses = projects.map(p => {
+    const start = new Date(p.startDate);
+    const end = new Date(p.endDate);
+    if (p.status === 'completed') return 'completed';
+    if (today > end) return 'overdue';
+    if (today >= start) return 'in-progress';
+    return 'pending';
+  });
+  const pending = statuses.filter(s => s === 'pending').length;
+  const active  = statuses.filter(s => s === 'in-progress').length;
+  const done    = statuses.filter(s => s === 'completed').length;
+  const overdue = statuses.filter(s => s === 'overdue').length;
+  document.getElementById('totalProjects').textContent = projects.length;
+  document.getElementById('activeProjects').textContent = active;
+  document.getElementById('completedProjects').textContent = done;
+  document.getElementById('pendingProjects').textContent = pending + overdue;
+}
+
+/* ---------- MODAL LISTA DE PROJETOS ---------- */
+function showProjectList(type) {
+  const titleMap = { all: "Todos os Projetos", active: "Projetos em Andamento", completed: "Projetos Concluídos", pending: "Projetos Pendentes/Atrasados" };
+  document.getElementById('projectListTitle').textContent = titleMap[type] || "Projetos";
+  const list = document.getElementById('projectListItems');
+  list.innerHTML = '';
+  const today = new Date();
+  let filtered = projects.map(p => {
+    const start = new Date(p.startDate);
+    const end = new Date(p.endDate);
+    let status = '';
+    if (p.status === 'completed') status = 'completed';
+    else if (today > end) status = 'overdue';
+    else if (today >= start) status = 'in-progress';
+    else status = 'pending';
+    return { ...p, status };
+  });
+  filtered.forEach(p => {
+  if (!p.name) {
+    console.warn("⚠️ Projeto sem nome detectado:", p);
+  }
+});
+
+  if (type === 'active') filtered = filtered.filter(p => p.status === 'in-progress');
+  if (type === 'completed') filtered = filtered.filter(p => p.status === 'completed');
+  if (type === 'pending') filtered = filtered.filter(p => p.status === 'pending' || p.status === 'overdue');
+  const order = { pending: 0, overdue: 1, 'in-progress': 2, completed: 3 };
+  filtered.sort((a, b) => order[a.status] - order[b.status]);
+  filtered.forEach(p => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.style.cursor = 'pointer';
+    const label = p.status === 'overdue' ? 'Atrasado' : p.status === 'in-progress' ? 'Em Progresso' : p.status === 'completed' ? 'Concluído' : 'Pendente';
+    li.innerHTML = `<span>${getTypeEmoji(p.type)} ${escapeHtml(p.name)}</span><span class="badge ${p.status === 'completed' ? 'bg-success' : p.status === 'in-progress' ? 'bg-warning' : 'bg-secondary'}">${label}</span>`;
+    li.onclick = () => showProjectModal(p.id);
+    list.appendChild(li);
+  });
+  new bootstrap.Modal(document.getElementById('projectListModal')).show();
+}
+
+/* ---------- EMOJIS ---------- */
+function getTypeEmoji(type) {
+  const map = { "Ônibus": "🚌", "Caminhão": "🚛", "Carreta": "🚜", "Van": "🚐", "Container": "📦", "Cabine": "🏠" };
+  return map[type] || "📅";
+}
+
+/* ---------- TIMELINE ---------- */
+function renderTimeline() {
+  const container = document.getElementById('timelineContainer');
+  container.innerHTML = '';
+  const today = new Date();
+  const order = { pending: 0, overdue: 1, 'in-progress': 2, completed: 3 };
+  const sorted = [...projects].sort((a, b) => {
+    const sta = today < new Date(a.startDate) ? 'pending' : (today > new Date(a.endDate) && a.status !== 'completed') ? 'overdue' : 'in-progress';
+    const stb = today < new Date(b.startDate) ? 'pending' : (today > new Date(b.endDate) && b.status !== 'completed') ? 'overdue' : 'in-progress';
+    return order[sta] - order[stb];
+  });
+  sorted.forEach(p => {
+  if (!p.name) {
+    console.warn("⚠️ Projeto sem nome detectado na timeline:", p);
+  }
+});
+
+  sorted.forEach(p => {
+    const start = new Date(p.startDate);
+    const end = new Date(p.endDate);
+    let status = '';
+    if (p.status === 'completed') status = 'completed';
+    else if (today > end) status = 'overdue';
+    else if (today >= start) status = 'in-progress';
+    else status = 'pending';
+    const div = document.createElement('div');
+    div.className = 'timeline-item ' + status;
+    const label = status === 'overdue' ? 'Atrasado' : status === 'in-progress' ? 'Em Progresso' : status === 'completed' ? 'Concluído' : 'Pendente';
+    div.innerHTML = `<span>${getTypeEmoji(p.type)} ${escapeHtml(p.name)}</span><span class="timeline-status">${label}</span>`;
+    div.onclick = () => showProjectModal(p.id);
+    container.appendChild(div);
+  });
+}
+
+/* ---------- CALENDÁRIO MENSAL ---------- */
+function renderCalendar() {
+  const month = currentDate.getMonth(), year = currentDate.getFullYear();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(d => {
+    const div = document.createElement('div'); div.textContent = d; div.className = 'calendar-day fw-bold text-center'; grid.appendChild(div);
+  });
+  for (let i = 0; i < firstDay; i++) { const div = document.createElement('div'); div.className = 'calendar-day'; grid.appendChild(div); }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const div = document.createElement('div'); div.className = 'calendar-day'; div.textContent = day;
+    const date = new Date(year, month, day);
+    if (date.toDateString() === new Date().toDateString()) div.classList.add('today');
+    const dayProjects = projects.filter(p => date >= new Date(p.startDate) && date <= new Date(p.endDate));
+    if (dayProjects.length) {
+      const emojiDiv = document.createElement('div');
+      emojiDiv.className = 'd-flex flex-wrap justify-content-center align-items-end h-100 pb-1';
+      dayProjects.slice(0, 3).forEach(p => {
+        const sp = document.createElement('span');
+        sp.className = 'emoji-day';
+        sp.textContent = getTypeEmoji(p.type);
+        sp.title = escapeHtml(p.name);
+        emojiDiv.appendChild(sp);
+      });
+      div.appendChild(emojiDiv);
+      div.onclick = () => {
+        if (dayProjects.length === 1) showProjectModal(dayProjects[0].id);
+        else showDayProjectsModal(date, dayProjects);
+      };
+    }
+    grid.appendChild(div);
+  }
+  document.getElementById('currentMonth').textContent = new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
+
+/* ---------- CALENDÁRIO ANUAL ---------- */
+function renderAnnualCalendar() {
+  const year = selectedYear;
+  const grid = document.getElementById('annualGrid');
+  grid.innerHTML = '';
+  document.getElementById('currentYear').textContent = year;
+  for (let m = 0; m < 12; m++) {
+    const monthName = new Date(year, m, 1).toLocaleDateString('pt-BR', { month: 'long' });
+    const monthProjects = projects.filter(p => {
+      const start = new Date(p.startDate), end = new Date(p.endDate);
+      return (start.getFullYear() <= year && end.getFullYear() >= year && start.getMonth() <= m && end.getMonth() >= m);
+    });
+    const emojis = [...new Set(monthProjects.map(p => getTypeEmoji(p.type)))].join(' ');
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="col-md-3 mb-3">
+        <div class="card text-center month-card">
+          <div class="card-body d-flex align-items-center justify-content-center" style="cursor:pointer; height:50%;" onclick="goToMonth(${year},${m})">
+            <h6>${monthName}</h6>
+          </div>
+          <div class="card-body d-flex align-items-center justify-content-center" style="cursor:pointer; height:50%; border-top:1px solid #dee2e6;" onclick="showMonthProjectsModal(${year},${m},${JSON.stringify(monthProjects.map(p => p.id))})">
+            <div><p class="mb-0">${monthProjects.length} projeto(s)</p><div>${emojis}</div></div>
+          </div>
+        </div>
+      </div>`);
+  }
+}
+
+/* ---------- MODAL PROJETOS DO DIA ---------- */
+function showDayProjectsModal(date, projectsList) {
+  const list = document.getElementById('dayProjectsList');
+  list.innerHTML = '';
+  projectsList.forEach(p => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.style.cursor = 'pointer';
+    li.innerHTML = `${getTypeEmoji(p.type)} ${escapeHtml(p.name)}`;
+    li.onclick = () => {
+      bootstrap.Modal.getInstance(document.getElementById('dayProjectsModal')).hide();
+      showProjectModal(p.id);
+    };
+    list.appendChild(li);
+  });
+  new bootstrap.Modal(document.getElementById('dayProjectsModal')).show();
+}
+
+/* ---------- MODAL PROJETOS DO MÊS ---------- */
+function showMonthProjectsModal(year, month, ids) {
+  const monthProjects = projects.filter(p => ids.includes(p.id));
+  const list = document.getElementById('dayProjectsList');
+  list.innerHTML = '';
+  monthProjects.forEach(p => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.style.cursor = 'pointer';
+    li.innerHTML = `${getTypeEmoji(p.type)} ${escapeHtml(p.name)}`;
+    li.onclick = () => {
+      bootstrap.Modal.getInstance(document.getElementById('dayProjectsModal')).hide();
+      showProjectModal(p.id);
+    };
+    list.appendChild(li);
+  });
+  new bootstrap.Modal(document.getElementById('dayProjectsModal')).show();
+}
+
+/* ---------- NAVEGAÇÃO MÊS / ANO ---------- */
+function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); renderCalendar(); }
+document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+document.getElementById('nextMonth').onclick = () => changeMonth(1);
+
+function changeYear(dir) { selectedYear += dir; renderAnnualCalendar(); }
+document.getElementById('prevYear').onclick = () => changeYear(-1);
+document.getElementById('nextYear').onclick = () => changeYear(1);
+
+/* ---------- ALTERNAR CALENDÁRIOS ---------- */
+function toggleCalendar(type) {
+  document.getElementById('monthlyCalendar').style.display = type === 'monthly' ? 'block' : 'none';
+  document.getElementById('annualCalendar').style.display = type === 'annual' ? 'block' : 'none';
+  if (type === 'annual') renderAnnualCalendar();
+}
+function goToMonth(year, month) {
+  currentDate = new Date(year, month, 1);
+  toggleCalendar('monthly');
+  renderCalendar();
+}
+/* ---------- MODAL DETALHES / EDIÇÃO ---------- */
+function showProjectModal(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  currentProjectId = id;
+
+  const today   = new Date();
+  const start   = new Date(p.startDate);
+  const end     = new Date(p.endDate);
+  let statusTxt = '';
+  if (p.status === 'completed')       statusTxt = 'Concluído';
+  else if (today > end)               statusTxt = 'Atrasado';
+  else if (today >= start)            statusTxt = 'Em Progresso';
+  else                                statusTxt = 'Pendente';
+
+  const progress = (p.status === 'completed') ? 100
+                 : Math.round(Math.max(0, Math.min(100, (today - start) / (end - start) * 100)));
+
+  /* preenche campos */
+  document.getElementById('detailModalTitle').textContent       = escapeHtml(p.name);
+  document.getElementById('detailModalType').textContent        = `${getTypeEmoji(p.type)} ${p.type}`;
+  document.getElementById('detailModalDesc').textContent        = escapeHtml(p.description);
+  document.getElementById('detailModalStart').textContent       = p.startDate.split('-').reverse().join('/');
+  document.getElementById('detailModalEnd').textContent         = p.endDate.split('-').reverse().join('/');
+  document.getElementById('detailModalStatus').textContent      = statusTxt;
+  document.getElementById('detailModalAddress').textContent     = p.address || '—';
+  document.getElementById('detailModalProgressBar').style.width = progress + '%';
+  document.getElementById('detailModalPercent').textContent     = progress;
+  document.getElementById('btnConcluir').style.display          = (p.status === 'completed') ? 'none' : 'inline-block';
+
+  /* campo prazo */
+  updateDeadlineText(p);
+
+  /* data de conclusão */
+  const completionInfo = document.getElementById('completionInfo');
+  if (p.status === 'completed' && p.completionDate) {
+    document.getElementById('detailModalCompletionDate').textContent = p.completionDate.split('-').reverse().join('/');
+    const diff = getCompletionDaysDifference(p);
+    if (diff) {
+      const el = document.getElementById('completionDifference');
+      if (diff.onTime) {
+        el.textContent = 'Concluído no prazo exato!'; el.className = 'text-success';
+      } else if (diff.early) {
+        el.textContent = `Concluído ${diff.days} dia(s) antes do prazo`; el.className = 'text-success';
+      } else {
+        el.textContent = `Concluído ${diff.days} dia(s) após o prazo`; el.className = 'text-warning';
+      }
+    }
+    completionInfo.style.display = 'block';
+  } else {
+    completionInfo.style.display = 'none';
+  }
+
+  new bootstrap.Modal(document.getElementById('projectDetailModal')).show();
+}
+
+/* ---------- TEXTO DE PRAZO (falta / atraso) ---------- */
+function updateDeadlineText(project) {
+  const today     = new Date();
+  const endDate   = new Date(project.endDate);
+  const diffMs    = endDate - today;
+  const diffDays  = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const el        = document.getElementById('deadlineText');
+
+  el.classList.remove('text-ontime','text-early','text-late');
+
+  if (project.status === 'completed') {
+    el.textContent = 'Concluído'; el.classList.add('text-ontime');
+  } else if (diffDays === 0) {
+    el.textContent = 'Vence hoje!'; el.classList.add('text-ontime');
+  } else if (diffDays > 0) {
+    el.textContent = `Faltam ${diffDays} dia(s)`; el.classList.add('text-early');
+  } else {
+    el.textContent = `Atrasado ${Math.abs(diffDays)} dia(s)`; el.classList.add('text-late');
+  }
+}
+function markAsDone() {
+  const p = projects.find(x => x.id === currentProjectId);
+  if (!p) return;
+  
+  const today = new Date().toISOString().split('T')[0];
+  p.status = 'completed';
+  p.progress = 100;
+  p.completionDate = today; // Adiciona data de conclusão
+
+  saveProject();
+  updateDashboard();
+  renderTimeline();
+  renderCalendar();
+  renderAnnualCalendar();
+  addProjectMarkers();
+  
+  bootstrap.Modal.getInstance(document.getElementById('projectDetailModal')).hide();
+  
+  // Calcular e mostrar dias de diferença
+  const endDate = new Date(p.endDate);
+  const completionDate = new Date(today);
+  const diffTime = completionDate - endDate;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  let message = '';
+  if (diffDays === 0) {
+    message = 'Projeto concluído no prazo exato! 🎯';
+  } else if (diffDays < 0) {
+    message = `Projeto concluído ${Math.abs(diffDays)} dia(s) antes do prazo! 🎉`;
+  } else {
+    message = `Projeto concluído ${diffDays} dia(s) após o prazo.`;
+  }
+  
+  toastShow(message, 'success');
+}
+
+function openEditModal() {
+  const p = projects.find(x => x.id === currentProjectId);
+  if (!p) return;
+  editingId = p.id;                       // MODO EDIÇÃO
+  document.getElementById('newProjectName').value = p.name;
+  document.getElementById('newProjectDesc').value = p.description;
+  document.getElementById('newProjectType').value = p.type;
+  document.getElementById('newProjectStart').value = p.startDate;
+  document.getElementById('newProjectEnd').value = p.endDate;
+  document.getElementById('newProjectState').value = p.location.state;
+  document.getElementById('projectAddress').value = p.address || '';
+  bootstrap.Modal.getInstance(document.getElementById('projectDetailModal')).hide();
+  new bootstrap.Modal(document.getElementById('newProjectModal')).show();
+}
+
+async function deleteProject(id) {
+  await fetch(`${API}/${id}`, { method: 'DELETE' });
+  loadProjects();
+  bootstrap.Modal.getInstance(document.getElementById('projectDetailModal')).hide();
+  toastShow('Projeto removido.', 'danger');
+}
+
+/* ---------- DATA DE CONCLUSÃO E CÁLCULO DE DIAS ---------- */
+function getCompletionDaysDifference(project) {
+  if (!project.completionDate || project.status !== 'completed') return null;
+  
+  const endDate = new Date(project.endDate);
+  const completionDate = new Date(project.completionDate);
+  const diffTime = completionDate - endDate;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return {
+    days: Math.abs(diffDays),
+    early: diffDays < 0,
+    late: diffDays > 0,
+    onTime: diffDays === 0
+  };
+}
+
+function updateDeadlineText() {
+  const p = projects.find(x => x.id === currentProjectId);
+  if (!p) return;
+
+  const today   = new Date();
+  const endDate = new Date(p.endDate);
+  const diffMs  = endDate - today;
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  const el = document.getElementById('deadlineText');
+  el.classList.remove('text-ontime','text-early','text-late');
+
+  if (p.status === 'completed') {
+    el.textContent = 'Concluído';
+    el.classList.add('text-ontime');
+  } else if (diffDays === 0) {
+    el.textContent = 'Vence hoje!';
+    el.classList.add('text-ontime');
+  } else if (diffDays > 0) {
+    el.textContent = `Faltam ${diffDays} dia(s)`;
+    el.classList.add('text-early');
+  } else {
+    el.textContent = `Atrasado ${Math.abs(diffDays)} dia(s)`;
+    el.classList.add('text-late');
+  }
+}
+
+
+/* ---------- TEXTO DE PRAZO (falta / atraso) ---------- */
+
+function initializeCompletionDates() {
+  projects.forEach(p => {
+    if (p.status === 'completed' && !p.completionDate) {
+      p.completionDate = p.endDate; // Se já estava completo, usa a data final
+    }
+  });
+  saveProject();
+}
+
+/* ---------- NOVO PROJETO ---------- */
+function newProjectModal() {
+  editingId = null;                       // MODO INSERÇÃO
+  document.getElementById('newProjectName').value = '';
+  document.getElementById('newProjectDesc').value = '';
+  document.getElementById('newProjectType').value = '';
+  document.getElementById('newProjectStart').value = '';
+  document.getElementById('newProjectEnd').value = '';
+  document.getElementById('newProjectState').value = '';
+  document.getElementById('projectAddress').value = '';
+  new bootstrap.Modal(document.getElementById('newProjectModal')).show();
+}
+
+/* ---------- SALVAR / ATUALIZAR PROJETO ---------- */
+function addNewProject() {
+  try {
+    const name  = escapeHtml(document.getElementById('newProjectName').value.trim());
+    const desc  = escapeHtml(document.getElementById('newProjectDesc').value.trim());
+    const type  = document.getElementById('newProjectType').value;
+    const start = document.getElementById('newProjectStart').value;
+    const end   = document.getElementById('newProjectEnd').value;
+    const state = document.getElementById('newProjectState').value;
+    const address = document.getElementById('projectAddress').value.trim();
+
+    if (!name || !type || !start || !end) {
+      toastShow('Preencha todos os campos obrigatórios.', 'warning');
+      return;
+    }
+
+    let proj;
+    if (editingId) {                                       // MODO EDIÇÃO
+      proj = projects.find(p => p.id === editingId);
+      if (!proj) { editingId = null; throw new Error('Projeto não encontrado'); }
+      proj.name        = name;
+      proj.description = desc;
+      proj.type        = type;
+      proj.startDate   = start;
+      proj.endDate     = end;
+      proj.location.state = state;
+      proj.address     = address;
+      toastShow('Prazo alterado com sucesso!', 'success');
+    } else {                                                // MODO NOVO
+      const id = projects.length ? Math.max(...projects.map(p => p.id)) + 1 : 1;
+      proj = {
+        id,
+        name,
+        description: desc,
+        type,
+        startDate: start,
+        endDate: end,
+        status: 'pending',
+        progress: 0,
+        location: {
+          lat: -23.55 + (Math.random() - 0.5) * 20,
+          lng: -46.63 + (Math.random() - 0.5) * 20,
+          state
+        },
+        address
+      };
+      projects.push(proj);
+      toastShow('Projeto adicionado com sucesso!', 'success');
+    }
+
+    saveProject();
+    updateDashboard(); renderTimeline(); renderCalendar(); renderAnnualCalendar(); addProjectMarkers();
+
+    const modalEl = document.getElementById('newProjectModal');
+    const modal   = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+    editingId = null;   // limpa flag
+
+  } catch (err) {
+    console.error('Erro ao salvar projeto:', err);
+    toastShow('Erro: ' + err.message, 'danger');
+  }
+}
+/* ---------- FUNÇÕES DE BUSCA ---------- */
+function searchProjects(query) {
+  const lowercaseQuery = query.toLowerCase();
+  return projects.filter(p => 
+    p.name.toLowerCase().includes(lowercaseQuery) ||
+    p.description.toLowerCase().includes(lowercaseQuery) ||
+    p.type.toLowerCase().includes(lowercaseQuery) ||
+    p.location.state.toLowerCase().includes(lowercaseQuery)
+  );
+}
+
+function performSearch() {
+  const query = document.getElementById('searchInput').value;
+  const results = searchProjects(query);
+  const resultsDiv = document.getElementById('searchResults');
+  
+  if (results.length === 0) {
+    resultsDiv.innerHTML = '<p class="text-muted">Nenhum projeto encontrado.</p>';
+    return;
+  }
+  
+  resultsDiv.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h6>Resultados da Busca (${results.length})</h6>
+        <ul class="list-group">
+          ${results.map(p => `
+            <li class="list-group-item" style="cursor: pointer;" onclick="showProjectModal(${p.id})">
+              ${getTypeEmoji(p.type)} ${escapeHtml(p.name)} - ${p.type}
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+}
+
+/* ---------- RELATÓRIOS ---------- */
+function generateReport() {
+  const report = {
+    totalProjetos: projects.length,
+    porTipo: {},
+    porEstado: {},
+    porStatus: {},
+    mediaDuracao: 0,
+    projetosVencidos: 0
+  };
+
+  projects.forEach(p => {
+    // Contagem por tipo
+    report.porTipo[p.type] = (report.porTipo[p.type] || 0) + 1;
+    
+    // Contagem por estado
+    report.porEstado[p.location.state] = (report.porEstado[p.location.state] || 0) + 1;
+    
+    // Contagem por status
+    const today = new Date();
+    const end = new Date(p.endDate);
+    let status = p.status;
+    if (p.status !== 'completed' && today > end) status = 'overdue';
+    report.porStatus[status] = (report.porStatus[status] || 0) + 1;
+    
+    // Projetos vencidos
+    if (today > end && p.status !== 'completed') {
+      report.projetosVencidos++;
+    }
+  });
+
+  // Calcular média de duração
+  const totalDias = projects.reduce((acc, p) => {
+    const diff = new Date(p.endDate) - new Date(p.startDate);
+    return acc + (diff / (1000 * 60 * 60 * 24));
+  }, 0);
+  report.mediaDuracao = Math.round(totalDias / projects.length);
+
+  return report;
+}
+
+function showReportModal() {
+  const report = generateReport();
+  
+  // Preencher resumo geral
+  const summaryList = document.getElementById('reportSummary');
+  summaryList.innerHTML = `
+    <li class="list-group-item">Total de Projetos: <strong>${report.totalProjetos}</strong></li>
+    <li class="list-group-item">Média de Duração: <strong>${report.mediaDuracao} dias</strong></li>
+    <li class="list-group-item">Projetos Vencidos: <strong>${report.projetosVencidos}</strong></li>
+  `;
+  
+  // Preencher por tipo
+  const typeList = document.getElementById('reportByType');
+  typeList.innerHTML = Object.entries(report.porTipo).map(([tipo, qtd]) => 
+    `<li class="list-group-item">${getTypeEmoji(tipo)} ${tipo}: <strong>${qtd}</strong></li>`
+  ).join('');
+  
+  // Preencher por estado
+  const stateList = document.getElementById('reportByState');
+  stateList.innerHTML = Object.entries(report.porEstado).map(([estado, qtd]) => 
+    `<li class="list-group-item"><strong>${estado}</strong>: ${qtd} projeto(s)</li>`
+  ).join('');
+  
+  // Preencher por status
+  const statusList = document.getElementById('reportByStatus');
+  const statusLabels = { completed: 'Concluído', 'in-progress': 'Em Progresso', pending: 'Pendente', overdue: 'Vencido' };
+  statusList.innerHTML = Object.entries(report.porStatus).map(([status, qtd]) => 
+    `<li class="list-group-item">${statusLabels[status] || status}: <strong>${qtd}</strong></li>`
+  ).join('');
+  
+  new bootstrap.Modal(document.getElementById('reportModal')).show();
+}
+
+function exportReport() {
+  const report = generateReport();
+  const reportData = [
+    { Métrica: 'Total de Projetos', Valor: report.totalProjetos },
+    { Métrica: 'Média de Duração (dias)', Valor: report.mediaDuracao },
+    { Métrica: 'Projetos Vencidos', Valor: report.projetosVencidos }
+  ];
+  
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.json_to_sheet(reportData);
+  const ws2 = XLSX.utils.json_to_sheet(Object.entries(report.porTipo).map(([tipo, qtd]) => ({ Tipo: tipo, Quantidade: qtd })));
+  const ws3 = XLSX.utils.json_to_sheet(Object.entries(report.porEstado).map(([estado, qtd]) => ({ Estado: estado, Quantidade: qtd })));
+  
+  XLSX.utils.book_append_sheet(wb, ws1, "Resumo");
+  XLSX.utils.book_append_sheet(wb, ws2, "Por Tipo");
+  XLSX.utils.book_append_sheet(wb, ws3, "Por Estado");
+  
+  XLSX.writeFile(wb, `relatorio_flex_projects_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+/* ---------- REFAZER (CTRL+Y) ---------- */
+function redoLastMove() {
+  if (historyIndex >= positionHistory.length - 1) {
+    toastShow('Nada para refazer.', 'info');
+    return;
+  }
+
+  historyIndex++;
+  const item = positionHistory[historyIndex];
+  const project = projects.find(p => p.id === item.projectId);
+
+  if (!project) return;
+
+  // Restaura a posição "nova" (que foi desfeita)
+  const oldLat = project.location.lat;
+  const oldLng = project.location.lng;
+  const oldAddress = project.address;
+
+  project.location.lat = item.newLat;
+  project.location.lng = item.newLng;
+  project.address = item.newAddress;
+
+  // Atualiza marcador no mapa
+  const markerIndex = projects.findIndex(p => p.id === item.projectId);
+  if (markerIndex !== -1 && markers[markerIndex]) {
+    markers[markerIndex].setLatLng([item.newLat, item.newLng]);
+  }
+
+  saveProject();
+  updateVehiclesTable();
+  updateUndoButton();
+  toastShow('Movimento refeito!', 'success');
+}
+
+/* ---------- ATUALIZAR BOTÃO REFAZER ---------- */
+function updateRedoButton() {
+  const redoBtn = document.getElementById('redoMoveBtn');
+  if (redoBtn) {
+    const canRedo = historyIndex < positionHistory.length - 1;
+    redoBtn.disabled = !canRedo;
+    redoBtn.style.opacity = canRedo ? '1' : '0.5';
+  }
+}
+
+/* ---------- HISTÓRICO DE POSIÇÕES (CTRL+Z DO MAPA) ---------- */
+function savePositionHistory(projectId, oldLat, oldLng, oldAddress) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+
+  // Remove histórico futuro se estiver no meio
+  positionHistory = positionHistory.slice(0, historyIndex + 1);
+
+  positionHistory.push({
+    projectId,
+    oldLat,
+    oldLng,
+    oldAddress,
+    newLat: project.location.lat,
+    newLng: project.location.lng,
+    newAddress: project.address || '',
+    timestamp: new Date()
+  });
+
+  historyIndex = positionHistory.length - 1;
+
+  // Limita a 50 passos
+  if (positionHistory.length > 50) {
+    positionHistory.shift();
+    historyIndex--;
+  }
+
+  updateUndoButton();
+  updateRedoButton();
+}
+
+function undoLastMove() {
+  if (historyIndex < 0) {
+    toastShow('Nada para desfazer.', 'info');
+    return;
+  }
+  
+  const lastMove = positionHistory[historyIndex];
+  const project = projects.find(p => p.id === lastMove.projectId);
+  
+  if (project) {
+    // Restaura posição antiga
+    const newLat = project.location.lat;
+    const newLng = project.location.lng;
+    const newAddress = project.address;
+    
+    project.location.lat = lastMove.oldLat;
+    project.location.lng = lastMove.oldLng;
+    project.address = lastMove.oldAddress;
+    
+    // Atualiza marcador no mapa
+    const markerIndex = projects.findIndex(p => p.id === lastMove.projectId);
+    if (markerIndex !== -1 && markers[markerIndex]) {
+      markers[markerIndex].setLatLng([lastMove.oldLat, lastMove.oldLng]);
+    }
+    
+    saveProject();
+    updateVehiclesTable();
+    historyIndex--;
+    updateUndoButton();
+    toastShow('Movimento desfeito!', 'success');
+  }
+}
+
+function updateUndoButton() {
+  const undoBtn = document.getElementById('undoMoveBtn');
+  if (undoBtn) {
+    undoBtn.disabled = historyIndex < 0;
+    undoBtn.style.opacity = historyIndex < 0 ? '0.5' : '1';
+  }
+  updateRedoButton(); // <<<<<<<<
+}
+
+// Atalho de teclado Ctrl+Z
+document.addEventListener('keydown', function (e) {
+  if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undoLastMove();
+  }
+  if (e.ctrlKey && e.key === 'y') {
+    e.preventDefault();
+    redoLastMove();
+  }
+});
+
+/* ---------- NOTIFICAÇÕES DE PRAZOS ---------- */
+function checkUpcomingDeadlines() {
+  const today = new Date();
+  const threeDaysFromNow = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+  
+  const upcomingProjects = projects.filter(p => {
+    const endDate = new Date(p.endDate);
+    return endDate <= threeDaysFromNow && endDate >= today && p.status !== 'completed';
+  });
+
+  if (upcomingProjects.length > 0) {
+    upcomingProjects.forEach(p => {
+      const daysUntilDeadline = Math.ceil((new Date(p.endDate) - today) / (1000 * 60 * 60 * 24));
+      toastShow(`${getTypeEmoji(p.type)} ${p.name} vence em ${daysUntilDeadline} dia(s)!`, 'warning');
+    });
+  }
+}
+
+/* ---------- LOCALIZAR ENDEREÇO ---------- */
+
+function localizarEnderecoProjeto() {
+  const address = document.getElementById('projectAddress').value.trim();
+  if (!address) return toastShow('Digite um endereço.', 'warning');
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d && d[0]) {
+        const lat = parseFloat(d[0].lat);
+        const lng = parseFloat(d[0].lon);
+        const target = editingId ? projects.find(p => p.id === editingId) : projects[projects.length - 1];
+        if (target) {
+          target.location.lat = lat + (Math.random() - 0.5) * 0.04;
+          target.location.lng = lng + (Math.random() - 0.5) * 0.04;
+          saveProject();
+          addProjectMarkers();
+          toastShow('Endereço localizado!', 'success');
+        }
+      } else {
+        toastShow('Endereço não encontrado.', 'warning');
+      }
+    })
+    .catch(() => toastShow('Erro ao consultar mapa.', 'danger'));
+}
+
+/* ---------- VEÍCULO RÁPIDO ---------- */
+function addVehicle() {
+  const type = document.getElementById('vehicleType').value;
+  const qty = parseInt(document.getElementById('vehicleQty').value) || 1;
+  const state = document.getElementById('vehicleState').value;
+  const lat = parseFloat(document.getElementById('vehicleLat').value) || -22.9068;
+  const lng = parseFloat(document.getElementById('vehicleLng').value) || -43.1729;
+  const address = document.getElementById('vehicleAddress').value.trim();
+
+  const newVehicles = [];
+  for (let i = 0; i < qty; i++) {
+    const id = projects.length ? Math.max(...projects.map(p => p.id)) + 1 + i : 1 + i;
+    const vehicle = {
+      id,
+      name: `${type} ${state}-${i + 1}`,
+      description: `Veículo ${type} adicionado rapidamente`,
+      type,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'pending',
+      progress: 0,
+      location: { lat: lat + (Math.random() - 0.5) * 2, lng: lng + (Math.random() - 0.5) * 2, state },
+      address
+    };
+    projects.push(vehicle);
+    newVehicles.push(vehicle);
+  }
+
+  saveProject();
+  updateDashboard(); renderTimeline(); renderCalendar(); renderAnnualCalendar(); addProjectMarkers();
+
+  bootstrap.Modal.getInstance(document.getElementById('newVehicleModal')).hide();
+  toastShow(`${qty} ${type}(s) adicionado(s) em ${state}!`, 'success');
+}
+/* ---------- COPIAR CABEÇALHO MODELO ---------- */
+function copyModelHeader() {
+  const header = "Nome\tTipo\tQuantidade\tEstado\tLatitude\tLongitude\tDescrição\tInício\tTérmino\tFuncionamento";
+  navigator.clipboard.writeText(header).then(() => {
+    toastShow('Cabeçalho copiado! Cole no Excel e preencha abaixo.', 'success');
+  });
+}
+
+/* ---------- EXPORTAR EXCEL ---------- */
+function exportExcel() {
+  const dados = projects.map(p => ({
+    Nome: p.name, Tipo: p.type, Início: p.startDate.split('-').reverse().join('/'), Término: p.endDate.split('-').reverse().join('/'),
+    Estado: p.location.state, Descrição: p.description, Funcionamento: 'Sim', CEP: p.cep || '', 
+    'Data de Conclusão': p.completionDate ? p.completionDate.split('-').reverse().join('/') : '',
+    'Dias de Diferença': p.completionDate ? getCompletionDaysDifference(p).days + (getCompletionDaysDifference(p).early ? ' dias antes' : getCompletionDaysDifference(p).late ? ' dias depois' : ' no prazo') : ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(dados);
+  ws['!cols'] = [{ wch: 30 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 40 }, { wch: 13 }, { wch: 10 }, { wch: 15 }, { wch: 20 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Projetos");
+  XLSX.writeFile(wb, "flex_projects.xlsx");
+}
+
+/* ---------- MAPA + MARCADORES + ARRASTAR ---------- */
+function initializeMap() {
+  if (map) return;
+
+  map = L.map('map', { center: [-15.78, -47.93], zoom: 4, worldCopyJump: true, zoomControl: true });
+
+  // Camada MapTiler Streets com nomes em português
+  L.tileLayer('https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=bJEANi1iBF3RusMBOEjV', {
+    attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    noWrap: true
+  }).addTo(map);
+
+  addProjectMarkers();
+  makeMarkersDraggable(false);
+}
+
+function addProjectMarkers() {
+  if (!map) return;
+  markers.forEach(m => map.removeLayer(m)); markers = [];
+  projects.forEach(p => {
+    if (!p.location) return;
+    const color = p.status === 'completed' ? '#34a853' : p.status === 'in-progress' ? '#fbbc04' : '#ea4335';
+    const customIcon = L.divIcon({
+      html: `<div class="vehicle-icon" style="background:${color}"><i class="fas fa-bus"></i></div>`,
+      className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 15]
+    });
+    const popupContent = `<div class="p-2"><h6>${getTypeEmoji(p.type)} ${escapeHtml(p.name)}</h6>
+      <p class="mb-1"><small>${escapeHtml(p.description)}</small></p>
+      <p class="mb-1"><strong>Tipo:</strong> ${p.type}</p>
+      <p class="mb-1"><strong>Estado:</strong> ${p.location.state}</p>
+      <p class="mb-1"><strong>Status:</strong> ${p.status === 'completed' ? 'Concluído' : (new Date() > new Date(p.endDate) && p.status !== 'completed') ? 'Atrasado' : 'Em Progresso'}</p>
+      <p class="mb-0"><strong>Progresso:</strong> ${p.progress}%</p></div>`;
+    const marker = L.marker([p.location.lat, p.location.lng], { icon: customIcon, draggable: true })
+      .addTo(map).bindPopup(popupContent)
+      .on('dragend', function (e) {
+        const newLat = e.target.getLatLng().lat;
+        const newLng = e.target.getLatLng().lng;
+        
+        // Salvar posição antiga no histórico antes de atualizar
+        const oldLat = p.location.lat;
+        const oldLng = p.location.lng;
+        const oldAddress = p.address || '';
+        
+        p.location.lat = newLat;
+        p.location.lng = newLng;
+        
+        // Reverse geocoding para atualizar Endereço/estado
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLat}&lon=${newLng}&addressdetails=1`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.address) {
+              const state = data.address.state || data.address['ISO3166-2-lvl4']?.split('-')[1];
+              if (state) {
+                p.location.state = state;
+              }
+              // fallback se o Nominatim não retornar state
+if (!state) {
+  const ufMatch = (data.display_name || '').match(/\b([A-Z]{2})\b/);
+  if (ufMatch && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(ufMatch[1])) {
+    p.location.state = ufMatch[1];
+  }
+}
+              p.address = data.display_name || p.address;
+            }
+            saveProject();
+            updateVehiclesTable();
+            
+            // Salvar no histórico após atualização completa
+            savePositionHistory(p.id, oldLat, oldLng, oldAddress);
+            
+            toastShow('Posição e localização atualizadas!', 'success');
+          })
+          .catch(() => {
+            saveProject();
+            updateVehiclesTable();
+            
+            // Salvar no histórico mesmo sem atualização de endereço
+            savePositionHistory(p.id, oldLat, oldLng, oldAddress);
+            
+            toastShow('Posição ajustada! (sem atualização de endereço)', 'warning');
+          });
+      });
+    markers.push(marker);
+  });
+  updateVehiclesTable();
+}
+
+function updateVehiclesTable() {
+  const tb = document.getElementById('vehiclesTable');
+  tb.innerHTML = '';
+  const states = [...new Set(projects.map(p => p.location.state))];
+  states.forEach(st => {
+    const bus = projects.filter(p => p.location.state === st && p.type === 'Ônibus').length;
+    const truck = projects.filter(p => p.location.state === st && p.type === 'Caminhão').length;
+    const van = projects.filter(p => p.location.state === st && p.type === 'Van').length;
+    const carreta = projects.filter(p => p.location.state === st && p.type === 'Carreta').length;
+    const container = projects.filter(p => p.location.state === st && p.type === 'Container').length;
+    const cabin = projects.filter(p => p.location.state === st && p.type === 'Cabine').length;
+    const total = bus + truck + van + carreta + container + cabin;
+    tb.insertAdjacentHTML('beforeend', `<tr><td><strong>${st}</strong></td><td>${bus}</td><td>${truck}</td><td>${van}</td><td>${carreta}</td><td>${container}</td><td>${cabin}</td><td><strong>${total}</strong></td></tr>`);
+  });
+}
+
+function filterVehicles(type) {
+  if (!map) return;
+  markers.forEach((m, i) => {
+    const p = projects[i];
+    if (!p) return;
+    const projectType = p.type.toLowerCase() === 'ônibus' ? 'bus' : p.type.toLowerCase() === 'caminhão' ? 'truck' : p.type.toLowerCase() === 'van' ? 'van' : p.type.toLowerCase() === 'cabine' ? 'cabin' : p.type.toLowerCase() === 'carreta' ? 'carreta' : p.type.toLowerCase() === 'container' ? 'container' : 'bus';
+    const show = type === 'all' || projectType === type;
+    m.setOpacity(show ? 1 : .3);
+  });
+}
+
+function toggleDragMode() {
+  const btn = document.getElementById('dragToggle');
+  const active = btn.classList.toggle('active');
+  makeMarkersDraggable(active);
+  document.getElementById('dragText').textContent = active ? '✅ Mover veículos' : '🔒 Mover veículos';
+}
+
+function makeMarkersDraggable(draggable) {
+  markers.forEach(m => m.dragging && (draggable ? m.dragging.enable() : m.dragging.disable()));
+}
+
+function loadMapData() { document.getElementById('mapSpreadsheet').click(); }
+
+function localizarEndereco() {
+  const address = document.getElementById('vehicleAddress').value.trim();
+  if (!address) return toastShow('Digite um endereço.', 'warning');
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address + ', Brasil')}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d && d[0]) {
+        document.getElementById('vehicleLat').value = d[0].lat;
+        document.getElementById('vehicleLng').value = d[0].lon;
+
+        let state = d[0].address.state || d[0].address['ISO3166-2-lvl4']?.split('-')[1];
+        if (!state) {
+          const ufMatch = (d[0].display_name || '').match(/\b([A-Z]{2})\b/);
+          if (ufMatch && ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].includes(ufMatch[1])) {
+            state = ufMatch[1];
+          }
+        }
+        if (state) document.getElementById('vehicleState').value = state;
+
+        toastShow('Endereço localizado!', 'success');
+      } else {
+        toastShow('Endereço não encontrado.', 'warning');
+      }
+    })
+    .catch(() => toastShow('Erro ao consultar mapa.', 'danger'));
+}
+/* ---------- PROCESSAR ARQUIVO UPADO ---------- */
+function processUploadedFile() {
+  if (!uploadedFile) { toastShow('Nenhum arquivo selecionado.', 'warning'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      let data;
+      if (uploadedFile.name.endsWith('.csv')) {
+        data = e.target.result.split('\n').map(row => row.split(','));
+      } else {
+        const wb = XLSX.read(e.target.result, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      }
+      if (data.length < 2) { toastShow('Arquivo vazio ou inválido.', 'danger'); return; }
+      const headers = data[0];
+      const required = ['Nome', 'Tipo', 'Quantidade', 'Estado', 'Latitude', 'Longitude'];
+      const missing = required.filter(h => !headers.includes(h));
+      if (missing.length) { toastShow('Colunas faltando: ' + missing.join(', '), 'danger'); return; }
+      const newProjects = [];
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row[0]) continue;
+        const id = projects.length ? Math.max(...projects.map(p => p.id)) + 1 + newProjects.length : 1 + newProjects.length;
+        newProjects.push({
+          id,
+          name: row[headers.indexOf('Nome')],
+          description: row[headers.indexOf('Descrição')] || '',
+          type: row[headers.indexOf('Tipo')],
+          startDate: row[headers.indexOf('Início')] ? row[headers.indexOf('Início')].split('/').reverse().join('-') : new Date().toISOString().split('T')[0],
+          endDate: row[headers.indexOf('Término')] ? row[headers.indexOf('Término')].split('/').reverse().join('-') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          status: 'pending',
+          progress: 0,
+          location: {
+            lat: parseFloat(row[headers.indexOf('Latitude')]) || -15.78,
+            lng: parseFloat(row[headers.indexOf('Longitude')]) || -47.93,
+            state: row[headers.indexOf('Estado')]
+          },
+          address: ''
+        });
+      }
+      projects.push(...newProjects);
+      saveProject();
+      updateDashboard(); renderTimeline(); renderCalendar(); renderAnnualCalendar(); addProjectMarkers();
+      bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+      toastShow(`${newProjects.length} projeto(s) importado(s)!`, 'success');
+    } catch (err) {
+      console.error(err);
+      toastShow('Erro ao processar arquivo.', 'danger');
+    }
+  };
+  reader.readAsBinaryString(uploadedFile);
+}
+
+/* ---------- INICIALIZAÇÃO ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  loadProjects();
+  // Inicializar datas de conclusão para projetos existentes
+  initializeCompletionDates();
+  
+  // Inicializar mapa quando visível
+  const mapSection = document.getElementById('map-section');
+  const mapObserver = new IntersectionObserver((entries, obs) => {
+    if (entries[0].isIntersecting && !map) {
+      initializeMap();
+      obs.disconnect();
+    }
+  });
+  mapObserver.observe(mapSection);
+  
+  // Inicializar calendário e dashboard
+  toggleCalendar('monthly');
+  updateDashboard();
+  renderTimeline();
+  renderCalendar();
+  
+  // Verificar prazos próximos
+  setTimeout(checkUpcomingDeadlines, 3000); // Verificar após 3 segundos
+  setInterval(checkUpcomingDeadlines, 24 * 60 * 60 * 1000); // Verificar uma vez por dia
+
+  /* drag-drop upload */
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+  uploadArea.onclick = () => fileInput.click();
+  fileInput.onchange = e => { uploadedFile = e.target.files[0]; };
+  uploadArea.ondragover = e => { e.preventDefault(); uploadArea.classList.add('bg-light'); };
+  uploadArea.ondragleave = () => uploadArea.classList.remove('bg-light');
+  uploadArea.ondrop = e => {
+    e.preventDefault();
+    uploadArea.classList.remove('bg-light');
+    uploadedFile = e.dataTransfer.files[0];
+    toastShow('Arquivo anexado! Clique em "Processar".', 'info');
+  };
+
+  /* Search functionality */
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+  
+});
+
+</script>
+</body>
+</html>
+
